@@ -254,12 +254,15 @@ public class ResumeTailoringService {
         // -------------------------------------------------------------
         if (geminiPipeline != null && geminiPipeline.isGeminiAvailable()) {
             try {
-                String fileName = "tailored_resume_" + job.getCompany().getName().replaceAll("\\W+", "_") + "_v" + nextVersion + ".pdf";
-                Path storageDir = Paths.get(uploadDir, "tailored", profile.getId().toString());
+                String candidateName = (user.getFirstName() != null && !user.getFirstName().isBlank())
+                        ? user.getFirstName()
+                        : "Candidate";
+                String fileName = generateResumeFilename(job.getCompany().getName(), candidateName, "pdf");
+                Path storageDir = Paths.get(uploadDir, "tailored", profile.getId().toString(), "v" + nextVersion);
                 if (!Files.exists(storageDir)) Files.createDirectories(storageDir);
                 String targetPdfPath = storageDir.resolve(fileName).toAbsolutePath().toString();
 
-                log.info("Executing Gemini 8-Stage Resume Tailoring Pipeline for candidate [{}] and job [{}]", profile.getId(), job.getId());
+                log.info("Executing Gemini 8-Stage Resume Tailoring Pipeline for candidate [{}] and job [{}] -> {}", profile.getId(), job.getId(), fileName);
                 GeminiResumeTailoringPipeline.PipelineExecutionResult gemResult = geminiPipeline.execute(
                         user, profile, masterResumeOpt.orElse(null), job, targetPdfPath
                 );
@@ -322,7 +325,8 @@ public class ResumeTailoringService {
                     Path texDir = Paths.get(uploadDir, "tailored-resumes", user.getId().toString(), entity.getId() != null ? entity.getId().toString() : UUID.randomUUID().toString());
                     try {
                         if (!Files.exists(texDir)) Files.createDirectories(texDir);
-                        Path texPath = texDir.resolve("resume.tex");
+                        String texFileName = generateResumeFilename(job.getCompany().getName(), candidateName, "tex");
+                        Path texPath = texDir.resolve(texFileName);
                         Files.writeString(texPath, gemResult.latexSource != null ? gemResult.latexSource : "", StandardCharsets.UTF_8);
                         entity.setLatexFilePath(texPath.toAbsolutePath().toString());
                     } catch (Exception e) {
@@ -415,12 +419,16 @@ public class ResumeTailoringService {
         entity.setLatexSource(latexSource);
 
         // 7. Compile PDF
-        String fileName = "tailored_resume_" + job.getCompany().getName().replaceAll("\\W+", "_") + "_v" + nextVersion + ".pdf";
-        Path storageDir = Paths.get(uploadDir, "tailored", profile.getId().toString());
+        String candidateNameFallback = (user.getFirstName() != null && !user.getFirstName().isBlank())
+                ? user.getFirstName()
+                : "Candidate";
+        String fileName = generateResumeFilename(job.getCompany().getName(), candidateNameFallback, "pdf");
+        Path storageDir = Paths.get(uploadDir, "tailored", profile.getId().toString(), "v" + nextVersion);
         String targetPdfPath = storageDir.resolve(fileName).toAbsolutePath().toString();
 
         File generatedPdf = null;
         try {
+            if (!Files.exists(storageDir)) Files.createDirectories(storageDir);
             generatedPdf = pdfGenerationService.generatePdfDocumentFromDoc(
                     latexSource, user, profile, doc, targetPdfPath
             );
@@ -1340,5 +1348,52 @@ public class ResumeTailoringService {
             }
             return list;
         }
+    }
+
+    /**
+     * Dedicated function to generate safe resume filename adhering strictly to:
+     * {CompanyName}_{CandidateName}.pdf (e.g., Lingaro_Narendra.pdf)
+     * Never contains 'tailored_resume'.
+     *
+     * Rules:
+     * - trim whitespace
+     * - remove unsafe filesystem characters
+     * - replace spaces with '_'
+     * - remove duplicate underscores
+     * - preserve readable capitalization
+     * - append extension (default .pdf)
+     */
+    public static String generateResumeFilename(String companyName, String candidateName) {
+        return generateResumeFilename(companyName, candidateName, "pdf");
+    }
+
+    public static String generateResumeFilename(String companyName, String candidateName, String extension) {
+        if (companyName == null || companyName.isBlank()) {
+            companyName = "Company";
+        }
+        if (candidateName == null || candidateName.isBlank()) {
+            candidateName = "Candidate";
+        }
+
+        // If candidate name has multiple words (e.g. "Narendra Nairy"), use first name token "Narendra"
+        String candidateFirst = candidateName.trim().split("\\s+")[0];
+
+        String cleanCompany = companyName.trim()
+                .replaceAll("[^a-zA-Z0-9\\s_-]", " ")
+                .trim()
+                .replaceAll("\\s+", "_")
+                .replaceAll("_+", "_");
+
+        String cleanCandidate = candidateFirst.trim()
+                .replaceAll("[^a-zA-Z0-9\\s_-]", " ")
+                .trim()
+                .replaceAll("\\s+", "_")
+                .replaceAll("_+", "_");
+
+        if (cleanCompany.isBlank()) cleanCompany = "Company";
+        if (cleanCandidate.isBlank()) cleanCandidate = "Candidate";
+
+        String ext = (extension != null && !extension.isBlank()) ? extension.replaceFirst("^\\.", "") : "pdf";
+        return cleanCompany + "_" + cleanCandidate + "." + ext;
     }
 }

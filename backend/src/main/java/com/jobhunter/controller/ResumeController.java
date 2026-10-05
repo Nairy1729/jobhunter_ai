@@ -11,6 +11,7 @@ import com.jobhunter.service.ResumeParserService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,6 +44,7 @@ public class ResumeController {
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<Resume>>> getResumes(@AuthenticationPrincipal CustomUserDetails userDetails) {
         CandidateProfile profile = profileRepository.findByUserId(userDetails.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Profile not found"));
@@ -51,11 +53,17 @@ public class ResumeController {
     }
 
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<Resume>> getResume(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable UUID id) {
         Resume resume = resumeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Resume not found with id: " + id));
+        if (resume.getCandidateProfile() == null ||
+            resume.getCandidateProfile().getUser() == null ||
+            !resume.getCandidateProfile().getUser().getId().equals(userDetails.getId())) {
+            throw new SecurityException("Resume not found or access denied: " + id);
+        }
         return ResponseEntity.ok(ApiResponse.ok("Resume retrieved", resume));
     }
 }

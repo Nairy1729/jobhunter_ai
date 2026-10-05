@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { ApiResponse, AuthResponse, CandidateProfile, CandidateSkill, ResumeUploadResponse } from '../types';
 
+const apiBase = (import.meta as any).env?.VITE_API_URL || '';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${apiBase}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,6 +17,17 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      localStorage.removeItem('jh_token');
+      window.dispatchEvent(new CustomEvent('jh_session_expired'));
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const apiClient = {
   auth: {
@@ -90,6 +103,10 @@ export const apiClient = {
       const res = await api.post<ApiResponse<{ jobId: string; applied: boolean; appliedAt?: string }>>(`/jobs/${id}/applied?applied=${applied}`);
       return res.data.data;
     },
+    getApplied: async (): Promise<import('../types').Job[]> => {
+      const res = await api.get<ApiResponse<import('../types').Job[]>>('/jobs/applied');
+      return res.data.data;
+    },
   },
   matching: {
     analyze: async (jobId: string): Promise<import('../types').MatchAnalysisResponse> => {
@@ -142,12 +159,25 @@ export const apiClient = {
       const token = localStorage.getItem('jh_token');
       return `/api/tailored-resumes/${id}/download${token ? `?token=${encodeURIComponent(token)}` : ''}`;
     },
-    downloadPdf: async (id: string, filename = 'tailored_resume.pdf'): Promise<void> => {
+    downloadPdf: async (id: string, defaultFilename?: string): Promise<void> => {
       const token = localStorage.getItem('jh_token');
       const res = await api.get(`/tailored-resumes/${id}/download`, {
         responseType: 'blob',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+
+      let filename = defaultFilename;
+      const disposition = res.headers['content-disposition'];
+      if (disposition) {
+        const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (match && match[1]) {
+          filename = match[1].replace(/['"]/g, '').trim();
+        }
+      }
+      if (!filename || filename.toLowerCase().includes('tailored_resume')) {
+        filename = defaultFilename || 'resume.pdf';
+      }
+
       const blob = new Blob([res.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -158,12 +188,25 @@ export const apiClient = {
       link.remove();
       window.URL.revokeObjectURL(url);
     },
-    downloadLatex: async (id: string, filename = 'tailored-resume.tex'): Promise<void> => {
+    downloadLatex: async (id: string, defaultFilename?: string): Promise<void> => {
       const token = localStorage.getItem('jh_token');
       const res = await api.get(`/v1/tailored-resumes/${id}/download-latex`, {
         responseType: 'blob',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+
+      let filename = defaultFilename;
+      const disposition = res.headers['content-disposition'];
+      if (disposition) {
+        const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (match && match[1]) {
+          filename = match[1].replace(/['"]/g, '').trim();
+        }
+      }
+      if (!filename || filename.toLowerCase().includes('tailored-resume')) {
+        filename = defaultFilename || 'resume.tex';
+      }
+
       const blob = new Blob([res.data], { type: 'application/x-tex' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -176,6 +219,47 @@ export const apiClient = {
     },
     renderLatex: async (id: string): Promise<any> => {
       const res = await api.post(`/v1/tailored-resumes/${id}/render-latex`);
+      return res.data.data;
+    },
+  },
+  government: {
+    list: async (filters?: {
+      state?: string;
+      district?: string;
+      employmentType?: string;
+      status?: string;
+      verificationStatus?: string;
+      includeUnverified?: boolean;
+      education?: string;
+      gender?: string;
+      query?: string;
+      eligibilityFilter?: string;
+      page?: number;
+      size?: number;
+    }): Promise<import('../types').PageResponse<import('../types').GovernmentJob>> => {
+      const res = await api.get<ApiResponse<import('../types').PageResponse<import('../types').GovernmentJob>>>('/government/jobs', {
+        params: filters,
+      });
+      return res.data.data;
+    },
+    getById: async (id: string): Promise<import('../types').GovernmentJobDetail> => {
+      const res = await api.get<ApiResponse<import('../types').GovernmentJobDetail>>(`/government/jobs/${id}`);
+      return res.data.data;
+    },
+    getCoverage: async (): Promise<import('../types').GovernmentCoverageMetrics> => {
+      const res = await api.get<ApiResponse<import('../types').GovernmentCoverageMetrics>>('/government/coverage');
+      return res.data.data;
+    },
+    getProfile: async (): Promise<import('../types').CandidateGovernmentProfile> => {
+      const res = await api.get<ApiResponse<import('../types').CandidateGovernmentProfile>>('/government/profile');
+      return res.data.data;
+    },
+    updateProfile: async (data: Partial<import('../types').CandidateGovernmentProfile>): Promise<import('../types').CandidateGovernmentProfile> => {
+      const res = await api.put<ApiResponse<import('../types').CandidateGovernmentProfile>>('/government/profile', data);
+      return res.data.data;
+    },
+    discover: async (request?: { state?: string; district?: string; searchKeyword?: string; maxQueries?: number }): Promise<any> => {
+      const res = await api.post<ApiResponse<any>>('/government/jobs/discover', request || {});
       return res.data.data;
     },
   },

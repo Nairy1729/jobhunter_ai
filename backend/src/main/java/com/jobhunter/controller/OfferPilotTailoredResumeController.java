@@ -90,8 +90,12 @@ public class OfferPilotTailoredResumeController {
         File texFile = tailoringEngineService.getLatexFile(id, userDetails.getId());
         Resource resource = new FileSystemResource(texFile);
 
+        String filename = (texFile.getName() != null && !texFile.getName().contains("tailored-resume"))
+                ? texFile.getName()
+                : "resume.tex";
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"tailored-resume.tex\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(MediaType.parseMediaType("application/x-tex"))
                 .contentLength(texFile.length())
                 .body(resource);

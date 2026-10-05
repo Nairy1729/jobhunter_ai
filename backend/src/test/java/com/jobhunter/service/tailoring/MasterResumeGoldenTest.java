@@ -2,6 +2,7 @@ package com.jobhunter.service.tailoring;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jobhunter.dto.matching.MatchAnalysisResponse;
+import com.jobhunter.dto.tailoring.ResumeValidationReport;
 import com.jobhunter.dto.tailoring.TailoringPlanDto;
 import com.jobhunter.model.entity.*;
 import com.jobhunter.model.fact.FactCategory;
@@ -469,6 +470,93 @@ class MasterResumeGoldenTest {
 
         } finally {
             Files.deleteIfExists(tempPdf);
+        }
+    }
+
+    @Test
+    @DisplayName("Filename & PDF Flow: Verify {CompanyName}_{CandidateName}.pdf format and zero divider overlap")
+    void testDividerFlowAndFilenameGeneration() throws IOException {
+        // 1. Verify Filename Generation
+        String fn1 = ResumeTailoringService.generateResumeFilename("Lingaro", "Narendra");
+        assertEquals("Lingaro_Narendra.pdf", fn1, "Must generate Lingaro_Narendra.pdf");
+        assertFalse(fn1.contains("tailored_resume"), "Must never contain tailored_resume");
+
+        String fn2 = ResumeTailoringService.generateResumeFilename("ABC Technologies Pvt. Ltd.", "Narendra Nairy");
+        assertEquals("ABC_Technologies_Pvt_Ltd_Narendra.pdf", fn2, "Must sanitize punctuation and use first token of candidate");
+        assertFalse(fn2.contains("tailored_resume"));
+
+        String fn3 = ResumeTailoringService.generateResumeFilename("Lingaro Group", "Narendra", "tex");
+        assertEquals("Lingaro_Group_Narendra.tex", fn3, "Must generate Lingaro_Group_Narendra.tex");
+
+        // 2. Build full resume document with multi-line bullets to test variable content height pushing dividers
+        TailoredResumeDocument doc = new TailoredResumeDocument();
+        doc.getHeader().fullName = "Narendra Kumar";
+        doc.getHeader().subTitle = "Software Engineer";
+        doc.getSummary().text = "Software Engineer with extensive experience in architecting high-reliability RESTful microservices, optimizing database performance, and building resilient backend systems with clean architecture.";
+
+        TailoredResumeDocument.SkillGroup sg = new TailoredResumeDocument.SkillGroup("Languages & Frameworks");
+        sg.skills.add(new TailoredResumeDocument.SkillItem("Java", com.jobhunter.model.fact.SkillEvidenceType.VERIFIED_SKILL, UUID.randomUUID()));
+        sg.skills.add(new TailoredResumeDocument.SkillItem("Spring Boot", com.jobhunter.model.fact.SkillEvidenceType.VERIFIED_SKILL, UUID.randomUUID()));
+        sg.skills.add(new TailoredResumeDocument.SkillItem("PostgreSQL", com.jobhunter.model.fact.SkillEvidenceType.VERIFIED_SKILL, UUID.randomUUID()));
+        doc.getSkillGroups().add(sg);
+
+        TailoredResumeDocument.ExperienceItem exp = new TailoredResumeDocument.ExperienceItem();
+        exp.company = "Hexaware Technologies";
+        exp.role = "Associate Software Engineer";
+        exp.duration = "Mar 2025 - Present";
+        exp.location = "Bengaluru, India";
+        // Multi-line bullets to force height expansion and ensure divider pushes downward
+        TailoredResumeDocument.ExperienceBullet b1 = new TailoredResumeDocument.ExperienceBullet();
+        b1.text = "Developed and maintained mission-critical backend microservices utilizing Java 17 and Spring Boot framework, achieving 99.9% uptime across production clusters.";
+        TailoredResumeDocument.ExperienceBullet b2 = new TailoredResumeDocument.ExperienceBullet();
+        b2.text = "Engineered high-throughput REST APIs and optimized PostgreSQL database queries, reducing average API response latency by 35% through indexing and caching.";
+        TailoredResumeDocument.ExperienceBullet b3 = new TailoredResumeDocument.ExperienceBullet();
+        b3.text = "Collaborated with cross-functional distributed teams following Agile methodologies to deliver scalable and maintainable enterprise software solutions.";
+        exp.bullets.addAll(List.of(b1, b2, b3));
+        doc.getExperiences().add(exp);
+
+        TailoredResumeDocument.ProjectItem proj = new TailoredResumeDocument.ProjectItem();
+        proj.name = "OfferPilot";
+        proj.subTitle = "AI Resume Tailoring Platform";
+        proj.technologies.addAll(List.of("Java", "Spring Boot", "PostgreSQL"));
+        TailoredResumeDocument.ProjectBullet pb1 = new TailoredResumeDocument.ProjectBullet();
+        pb1.text = "Engineered deterministic LaTeX and PDFBox document compilation engines with sub-200ms generation latency.";
+        TailoredResumeDocument.ProjectBullet pb2 = new TailoredResumeDocument.ProjectBullet();
+        pb2.text = "Implemented strict anti-hallucination verification gates enforcing 100% evidence-grounded resume claims.";
+        proj.bullets.addAll(List.of(pb1, pb2));
+        doc.getProjects().add(proj);
+
+        TailoredResumeDocument.EducationItem edu1 = new TailoredResumeDocument.EducationItem();
+        edu1.institution = "Vellore Institute of Technology";
+        edu1.degree = "B.Tech in Electronics & Communication";
+        edu1.dates = "2020 - 2024";
+        doc.getEducation().add(edu1);
+
+        TailoredResumeDocument.AchievementItem ach1 = new TailoredResumeDocument.AchievementItem();
+        ach1.title = "Innovative Champion Award";
+        ach1.description = "Awarded for excellence and innovation in backend engineering.";
+        doc.getAchievements().add(ach1);
+
+        // 3. Render PDF with PDFBox
+        File pdfFile = Files.createTempFile("test_divider_flow_", ".pdf").toFile();
+        try {
+            pdfGenerationService.renderPdfWithPdfBoxFromDoc(candidateUser, candidateProfile, doc, pdfFile);
+            assertTrue(pdfFile.exists() && pdfFile.length() > 0, "PDF must be rendered successfully");
+
+            // 4. Validate PDF structure and integrity
+            ResumeValidationReport report = pdfGenerationService.validatePdf(pdfFile, "Narendra");
+            assertTrue(report.isPassed(), "PDF validation must pass: " + report.getFailedChecks());
+
+            // 5. Verify text content was properly rendered
+            String text = pdfGenerationService.extractTextFromPdf(pdfFile);
+            assertTrue(text.contains("PROFESSIONAL SUMMARY"));
+            assertTrue(text.contains("Hexaware Technologies"));
+            assertTrue(text.contains("OfferPilot"));
+            assertTrue(text.contains("Vellore Institute of Technology"));
+            assertTrue(text.contains("Innovative Champion Award"));
+
+        } finally {
+            pdfFile.delete();
         }
     }
 }

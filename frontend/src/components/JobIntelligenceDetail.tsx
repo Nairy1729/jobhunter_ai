@@ -175,10 +175,7 @@ export const JobIntelligenceDetail: React.FC<JobIntelligenceDetailProps> = ({
     setIsDownloadingPdf(true);
     setError(null);
     try {
-      const companyClean = (currentJob.companyName || 'job').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const roleClean = (currentJob.title || 'role').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const filename = `tailored_resume_${companyClean}_${roleClean}.pdf`;
-      await apiClient.tailoring.downloadPdf(tailoredResume.id, filename);
+      await apiClient.tailoring.downloadPdf(tailoredResume.id);
     } catch (err: any) {
       console.error('Failed to download PDF', err);
       setError('Failed to download tailored PDF. Please verify backend connection.');
@@ -192,10 +189,7 @@ export const JobIntelligenceDetail: React.FC<JobIntelligenceDetailProps> = ({
     setIsDownloadingLatex(true);
     setError(null);
     try {
-      const companyClean = (currentJob.companyName || 'job').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const roleClean = (currentJob.title || 'role').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const filename = `tailored_resume_${companyClean}_${roleClean}.tex`;
-      await apiClient.tailoring.downloadLatex(tailoredResume.id, filename);
+      await apiClient.tailoring.downloadLatex(tailoredResume.id);
     } catch (err: any) {
       console.error('Failed to download LaTeX', err);
       setError('Failed to download tailored LaTeX (.tex) file. Please verify backend connection.');

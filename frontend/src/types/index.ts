@@ -355,3 +355,172 @@ export interface TailoredResume {
   createdAt: string;
   updatedAt: string;
 }
+
+// --- GOVERNMENT JOB DISCOVERY ENGINE TYPES ---
+export type GovernmentEmploymentType =
+  | 'PERMANENT'
+  | 'REGULAR'
+  | 'CONTRACTUAL'
+  | 'SAMVIDA'
+  | 'TEMPORARY'
+  | 'OUTSOURCED'
+  | 'SCHEME_BASED'
+  | 'MISSION_BASED'
+  | 'HONORARIUM'
+  | 'APPRENTICESHIP'
+  | 'PART_TIME'
+  | 'DISTRICT_LEVEL'
+  | 'BLOCK_LEVEL'
+  | 'PANCHAYAT_LEVEL'
+  | 'MUNICIPAL';
+
+export type GovernmentVerificationStatus =
+  | 'VERIFIED_OFFICIAL'
+  | 'VERIFIED_OFFICIAL_NOTIFICATION'
+  | 'OFFICIAL_SOURCE'
+  | 'SECONDARY_SOURCE_VERIFIED'
+  | 'UNVERIFIED'
+  | 'EXPIRED';
+
+export type AuthenticityLevel = 'VERIFIED' | 'PARTIALLY_VERIFIED' | 'UNVERIFIED';
+
+export type GovernmentJobStatus = 'OPEN' | 'CLOSING_SOON' | 'CLOSED' | 'CANCELLED' | 'POSTPONED';
+
+export type EligibilityStatus = 'ELIGIBLE' | 'LIKELY_ELIGIBLE' | 'NOT_ELIGIBLE' | 'UNKNOWN';
+
+export interface EligibilityReason {
+  criterion: string;
+  status: 'PASS' | 'FAIL' | 'UNKNOWN';
+  explanation: string;
+}
+
+export interface EligibilityEvaluationResult {
+  status: EligibilityStatus;
+  summaryMessage: string;
+  reasons: EligibilityReason[];
+  missingProfileFields: string[];
+}
+
+export interface GovernmentJob {
+  id: string;
+  title: string;
+  organization: string;
+  department?: string;
+  state: string;
+  district?: string;
+  block?: string;
+  employmentType: GovernmentEmploymentType;
+  vacanciesCount?: number;
+  salary?: string;
+  honorarium: boolean;
+  applicationMode: string;
+  applicationStartDate?: string;
+  applicationLastDate?: string;
+  sourceUrl?: string;
+  notificationUrl?: string;
+  applicationUrl?: string;
+  authority?: string;
+  sourceDomain?: string;
+  notificationNumber?: string;
+  verificationStatus: GovernmentVerificationStatus;
+  authenticityScore: number;
+  authenticityLevel: AuthenticityLevel;
+  status: GovernmentJobStatus;
+  genderEligibility?: string;
+  minimumAge?: number;
+  maximumAge?: number;
+  educationList?: string[];
+  domicile?: string;
+  candidateEligibility?: EligibilityEvaluationResult;
+  corrigendaCount: number;
+  createdAt: string;
+}
+
+export interface EvidenceItem {
+  fieldName: string;
+  fieldValue: string;
+  sourceDocument: string;
+  pageOrSection: string;
+  excerpt: string;
+}
+
+export interface CorrigendumItem {
+  noticeType: string;
+  title: string;
+  documentUrl?: string;
+  issueDate?: string;
+  description: string;
+  revisedLastDate?: string;
+  revisedVacancies?: number;
+}
+
+export interface GovernmentJobDetail extends GovernmentJob {
+  canonicalId: string;
+  vacanciesBreakdown?: string[];
+  salaryMin?: number;
+  salaryMax?: number;
+  payLevel?: string;
+  applicationFee?: string;
+  examDate?: string;
+  interviewDate?: string;
+  rawContent?: string;
+  gender?: string;
+  education?: string[];
+  experience?: string[];
+  experienceYearsMin?: number;
+  categoryReservations?: string[];
+  pwdEligible?: boolean;
+  exServicemanEligible?: boolean;
+  otherConditions?: string;
+  evidenceList: EvidenceItem[];
+  corrigenda: CorrigendumItem[];
+  updatedAt: string;
+}
+
+export interface CandidateGovernmentProfile {
+  age?: number;
+  dob?: string;
+  gender?: string;
+  state?: string;
+  district?: string;
+  domicileState?: string;
+  domicileDistrict?: string;
+  highestEducation?: string;
+  degrees: string[];
+  passingYear?: number;
+  yearsOfExperience: number;
+  category: string;
+  pwd: boolean;
+  exServiceman: boolean;
+  preferredStates: string[];
+  preferredDistricts: string[];
+  preferredEmploymentTypes: string[];
+  skills: string[];
+}
+
+export interface GovernmentCoverageMetrics {
+  totalSources: number;
+  activeSources: number;
+  failedSources: number;
+  lastSuccessfulCrawl?: string;
+  centralGovernment: number;
+  stateGovernment: number;
+  districtAdministration: number;
+  municipal: number;
+  panchayat: number;
+  universities: number;
+  psus: number;
+  departments: number;
+  health: number;
+  education: number;
+  womenChildDevelopment: number;
+  other: number;
+  totalJobs: number;
+  verifiedOfficialJobs: number;
+  contractualSamvidaJobs: number;
+  smallLocalJobs: number;
+  openJobs: number;
+  employmentTypeBreakdown: Record<string, number>;
+  verificationStatusBreakdown: Record<string, number>;
+}
+

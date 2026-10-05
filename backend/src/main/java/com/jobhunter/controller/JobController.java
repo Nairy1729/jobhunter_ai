@@ -172,4 +172,11 @@ public class JobController {
         JobAppliedStatusDto status = jobService.setJobAppliedStatus(id, userDetails.getId(), isApplied);
         return ResponseEntity.ok(ApiResponse.ok("Job application status updated", status));
     }
+
+    @GetMapping("/applied")
+    public ResponseEntity<ApiResponse<List<JobDto>>> getAppliedJobs(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<JobDto> appliedJobs = jobService.getAppliedJobs(userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.ok("Applied jobs retrieved successfully", appliedJobs));
+    }
 }

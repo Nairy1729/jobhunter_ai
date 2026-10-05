@@ -1,122 +1,151 @@
 # JobHunter AI 🎯
-> **Autonomous, Intelligent Career Copilot & Real-Time Job Application Optimization Platform**
+> **Autonomous Career Intelligence & Dual-Engine Public/Private Job Discovery Platform**
 
-JobHunter AI is an autonomous, high-conviction job discovery, semantic matching, and application preparation platform built for software engineers. Unlike high-volume generic scrapers, JobHunter AI emphasizes deep semantic understanding, verifiable grounding against candidate experience, and automated application collateral generation without hallucination.
-
----
-
-## ⚡ Core Highlights
-
-- 🔎 **Autonomous Multi-Source Discovery**: Integrates Firecrawl to search, crawl, and scrape ATS career portals (Greenhouse, Lever, Ashby, Workday, etc.) with SHA-256 deduplication.
-- 🧠 **Deep Semantic Understanding**: Extracts hard requirements, nice-to-haves, seniority, domain, work mode, and implicit requirements with token-boundary regex and LLM reasoning.
-- 🛡️ **Zero-Tolerance Hallucination Gate**: Programmatic Java validation cross-references all claims against actual candidate experience, skills, and projects before any resume modification.
-- 📊 **Application Advantage System ("The Edge")**: Computes multi-dimensional fit scoring, honest gap identification, talking points, and tailored application strategies.
-- 📝 **OfferPilot Tailoring Engine**: Produces role-specific, grounded resume revisions with visual side-by-side diff tracking.
-- 🔒 **Mandatory Human-in-the-Loop Gate**: Pure transparency and control—no automated blind submissions.
+JobHunter AI is an autonomous, high-conviction job discovery, verification, eligibility matching, and application platform. Built with a strict two-pillar architecture, it seamlessly separates commercial private employment matching from authenticated Indian public sector recruitment.
 
 ---
 
-## 🏗️ Architecture
+## ⚡ Core Pillars
+
+### 1. 💼 Private Sector Jobs Engine
+- **Profile-First Discovery**: Matches candidate master facts, skills, and commercial experiences against real market job descriptions.
+- **Strict Grounding & Zero-Hallucination Gate**: Audits every bullet point against candidate ground-truth facts. Never fabricates claims or companies.
+- **OfferPilot LaTeX Tailoring**: Re-aligns existing factual achievements to match job requirements and generates crisp, ATS-compliant single-page PDFs.
+- **Visual Diff Inspection**: Side-by-side diff tracking highlighting exactly what was emphasized before downloading.
+
+### 2. 🏛️ Government Recruitment Engine (India-Wide)
+- **Multi-Tier Official Discovery**: Discovers recruitment notifications across Central Ministries, State PSCs, District Administrations (NIC portals), Municipal Corporations, Panchayati Raj, Health Missions (NHM), Women & Child Development (Anganwadi), Samvida, and Contractual postings.
+- **Strictly NO Resume Tailoring**: Government recruitment strictly forbids modified resumes. Instead, JobHunter connects candidates to original notification PDFs and official application portals.
+- **Deterministic Eligibility Evaluation**: Matches candidate state, district, age (with category relaxations), minimum educational qualifications (8th, 10th, 12th, ITI, Diploma, Graduation, Post-Graduation), and specialized certificates.
+- **Authenticity & Source Transparency**: Clear verification badges indicating official government domains (`.gov.in`, `.nic.in`) and live source registry telemetry.
+
+### 3. 📋 Applications Tracker & Profile Hub
+- **Applications Tracking**: Minimal, authentic tracker of submitted applications with direct links and status toggles.
+- **Unified Profile Hub**: Seamless two-tab management for both Private Career Facts & Master Resume upload and Government Eligibility Parameters.
+
+---
+
+## 🧭 Information Architecture
+
+```text
+JobHunter
+│
+├── Jobs                 (Private sector discovery, ATS matching & grounded tailoring)
+├── Government Jobs      (Verified public recruitment feed, eligibility & official links)
+├── Applications         (Minimal tracking of applied opportunities)
+└── Profile              (Career facts, Master Resume PDF & Government eligibility)
+```
+
+---
+
+## 🏗️ Technical Architecture
 
 ```
                        ┌─────────────────────────┐
                        │   React 18 + Vite UI    │
                        │ (TypeScript + Tailwind) │
                        └────────────┬────────────┘
-                                    │ REST / JWT
+                                    │ REST / JWT (Bearer)
                                     ▼
                        ┌─────────────────────────┐
                        │   Spring Boot 3 (Java)  │
-                       │  - Semantic Matcher     │
-                       │  - Grounding Gate       │
-                       │  - Discovery Engine     │
+                       │  - Private Matcher      │
+                       │  - Gov Eligibility     │
+                       │  - Source Registry      │
+                       │  - Resume Auditor       │
                        └────────────┬────────────┘
                      ┌──────────────┴──────────────┐
                      ▼                             ▼
        ┌───────────────────────────┐ ┌───────────────────────────┐
        │   PostgreSQL 16 + JSONB   │ │   AI / Web Intelligence   │
-       │ (Flyway Migrations + GIN) │ │  (Gemini API + Firecrawl) │
+       │ (Flyway V1-V8 Migrations) │ │  (Gemini API + Firecrawl) │
        └───────────────────────────┘ └───────────────────────────┘
 ```
 
 - **Backend**: Java 17 LTS, Spring Boot 3.3.4, Spring Security 6 (Stateless JWT), Spring Data JPA, Hibernate, Flyway, Resilience4j, Apache PDFBox.
 - **Frontend**: React 18.3, TypeScript, Vite, Tailwind CSS, Lucide Icons, Axios.
-- **Data Store**: PostgreSQL 16 with native JSONB vector/embedding structures and GIN indexing.
-- **AI & Web Intelligence**: Google Gemini API, Firecrawl Web Crawl/Scrape API.
+- **Database**: PostgreSQL 16 with native JSONB, GIN indexing, and Flyway schema versioning.
+- **Security**: IDOR ownership checks, configurable CORS origins, HTTP security headers (`DENY` frames, `nosniff`), sanitized production error messages.
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Local Development Setup
 
 ### Prerequisites
-
-- **Java 17+**
+- **Java 17+** (JDK)
 - **Node.js 18+** & `npm`
 - **PostgreSQL 16+**
-- **Gemini API Key** & **Firecrawl API Key** (optional for live scraping)
+- **Gemini API Key** & **Firecrawl API Key** (optional for live deep crawling)
 
 ### 1. Database Setup
-
-Ensure PostgreSQL is running and create the database:
-
 ```sql
 CREATE DATABASE jobhunter_db;
-CREATE USER jobhunter WITH PASSWORD 'jobhunter';
-GRANT ALL PRIVILEGES ON DATABASE jobhunter_db TO jobhunter;
+CREATE USER postgres WITH PASSWORD 'postgres';
+GRANT ALL PRIVILEGES ON DATABASE jobhunter_db TO postgres;
 ```
 
 ### 2. Environment Configuration
-
-Copy the example environment file and set your keys:
-
+Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
-
-Set your API keys inside `.env`:
+Fill in your credentials:
 ```env
-GEMINI_API_KEY=your_gemini_api_key_here
-FIRECRAWL_API_KEY=your_firecrawl_api_key_here
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/jobhunter_db
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=postgres
+APP_JWT_SECRET=your_secure_256_bit_secret_key_here
+GEMINI_API_KEY=your_gemini_api_key
+FIRECRAWL_API_KEY=your_firecrawl_api_key
 ```
 
-### 3. Backend Setup
-
+### 3. Start Backend
 ```bash
 cd backend
-./mvnw clean spring-boot:run
+./mvnw.cmd spring-boot:run
 ```
-The backend starts at `http://localhost:8085`.
+Backend starts at `http://localhost:8085`.
 
-Default seeded test candidate credentials:
-- **Email**: `candidate@jobhunter.ai`
-- **Password**: `password123`
-
-### 4. Frontend Setup
-
+### 4. Start Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-The frontend starts at `http://localhost:5173`.
+Frontend starts at `http://localhost:5173`.
+
+Default seeded demo credentials:
+- **Email**: `candidate@jobhunter.ai`
+- **Password**: `password123`
 
 ---
 
-## 📂 Documentation
+## 📦 Production Build & Testing
 
-Comprehensive engineering specs and milestone reports are available in the [`docs/`](docs/) directory:
+### Run Backend Unit & Integration Tests (123 Tests)
+```bash
+cd backend
+./mvnw.cmd test
+```
 
-- [Product Specification](docs/PRODUCT_SPEC.md)
-- [System Architecture](docs/ARCHITECTURE.md)
-- [Database Design & Schema](docs/DATABASE_DESIGN.md)
-- [Agent & Multi-Agent Architecture](docs/AGENT_ARCHITECTURE.md)
-- [Security Model & Threat Mitigation](docs/SECURITY_MODEL.md)
-- [Firecrawl Integration Blueprint](docs/FIRECRAWL_INTEGRATION.md)
-- [OfferPilot Tailoring Engine](docs/OFFERPILOT_TAILORING_BEHAVIOR.md)
-- [Milestone Implementation Reports](docs/)
+### Build Executable Spring Boot JAR
+```bash
+cd backend
+./mvnw.cmd clean package -DskipTests
+```
+Generates executable archive at `backend/target/jobhunter-ai-backend-0.0.1-SNAPSHOT.jar`. Run with:
+```bash
+java -jar backend/target/jobhunter-ai-backend-0.0.1-SNAPSHOT.jar
+```
+
+### Build Production Frontend Bundle
+```bash
+cd frontend
+npm run build
+```
+Generates production static bundle in `frontend/dist/`.
 
 ---
 
 ## 📄 License
-
 MIT License. See [LICENSE](LICENSE) for details.

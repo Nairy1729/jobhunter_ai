@@ -1,0 +1,24 @@
+package com.jobhunter.model.entity.government;
+
+public enum GovernmentSourceType {
+    CENTRAL_GOVERNMENT,
+    STATE_GOVERNMENT,
+    DISTRICT_ADMINISTRATION,
+    PSC,
+    STAFF_SELECTION,
+    RAILWAY,
+    BANKING,
+    PSU,
+    MINISTRY,
+    DEPARTMENT,
+    UNIVERSITY,
+    MUNICIPALITY,
+    PANCHAYAT,
+    HEALTH,
+    EDUCATION,
+    WOMEN_CHILD_DEVELOPMENT,
+    MISSION,
+    SCHEME,
+    RECRUITMENT_BOARD,
+    OTHER
+}

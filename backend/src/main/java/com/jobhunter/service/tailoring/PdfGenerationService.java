@@ -419,98 +419,106 @@ public class PdfGenerationService {
 
             // 2. Professional Summary
             if (doc.getSummary() != null && doc.getSummary().text != null && !doc.getSummary().text.isBlank()) {
-                pageState.drawSectionHeading("PROFESSIONAL SUMMARY", headingFont);
-                pageState.drawParagraph(sanitizeForPdf(doc.getSummary().text), regularFont, 9.5f, 12f);
-                pageState.y -= 4f;
+                pageState.renderSection("PROFESSIONAL SUMMARY", headingFont, () -> {
+                    pageState.drawParagraph(sanitizeForPdf(doc.getSummary().text), regularFont, 9.5f, 12f);
+                });
             }
 
             // 3. Technical Skills
             if (doc.getSkillGroups() != null && !doc.getSkillGroups().isEmpty()) {
-                pageState.drawSectionHeading("TECHNICAL SKILLS", headingFont);
-                for (TailoredResumeDocument.SkillGroup sg : doc.getSkillGroups()) {
-                    if (sg.skills == null || sg.skills.isEmpty()) continue;
-                    String items = sg.skills.stream().map(s -> s.name).collect(Collectors.joining(", "));
-                    pageState.drawSkillCategory(sg.category + ": ", items, boldFont, regularFont, 9.5f);
-                }
-                pageState.y -= 4f;
+                pageState.renderSection("TECHNICAL SKILLS", headingFont, () -> {
+                    for (TailoredResumeDocument.SkillGroup sg : doc.getSkillGroups()) {
+                        if (sg.skills == null || sg.skills.isEmpty()) continue;
+                        String items = sg.skills.stream().map(s -> s.name).collect(Collectors.joining(", "));
+                        pageState.drawSkillCategory(sg.category + ": ", items, boldFont, regularFont, 9.5f);
+                    }
+                });
             }
 
             // 4. Professional Experience
             if (doc.getExperiences() != null && !doc.getExperiences().isEmpty()) {
-                pageState.drawSectionHeading("PROFESSIONAL EXPERIENCE", headingFont);
-                for (TailoredResumeDocument.ExperienceItem exp : doc.getExperiences()) {
-                    pageState.ensureSpace(45f);
-                    String company = sanitizeForPdf(exp.company != null ? exp.company : "Company");
-                    String duration = sanitizeForPdf(exp.duration != null ? exp.duration : "");
-                    String role = sanitizeForPdf(exp.role != null ? exp.role : "Software Engineer");
-                    String location = sanitizeForPdf(exp.location != null ? exp.location : "Bengaluru, India");
+                pageState.renderSection("PROFESSIONAL EXPERIENCE", headingFont, () -> {
+                    for (TailoredResumeDocument.ExperienceItem exp : doc.getExperiences()) {
+                        pageState.ensureSpace(45f);
+                        String company = sanitizeForPdf(exp.company != null ? exp.company : "Company");
+                        String duration = sanitizeForPdf(exp.duration != null ? exp.duration : "");
+                        String role = sanitizeForPdf(exp.role != null ? exp.role : "Software Engineer");
+                        String location = sanitizeForPdf(exp.location != null ? exp.location : "Bengaluru, India");
 
-                    pageState.drawTwoColumnLine(company, duration, boldFont, boldFont, 10f);
-                    pageState.drawTwoColumnLine(role, location, italicFont, italicFont, 9.5f);
-                    pageState.y -= 2f;
+                        pageState.drawTwoColumnLine(company, duration, boldFont, boldFont, 10f);
+                        pageState.drawTwoColumnLine(role, location, italicFont, italicFont, 9.5f);
+                        pageState.y -= 2f;
 
-                    for (TailoredResumeDocument.ExperienceBullet b : exp.bullets) {
-                        if (b.text != null && !b.text.isBlank()) {
-                            pageState.drawBullet(sanitizeForPdf(b.text), regularFont, 9.5f, 12f);
+                        for (TailoredResumeDocument.ExperienceBullet b : exp.bullets) {
+                            if (b.text != null && !b.text.isBlank()) {
+                                pageState.drawBullet(sanitizeForPdf(b.text), regularFont, 9.5f, 12f);
+                            }
                         }
+                        pageState.y -= 3f;
                     }
-                    pageState.y -= 4f;
-                }
+                });
             }
 
             // 5. Technical Projects
             if (doc.getProjects() != null && !doc.getProjects().isEmpty()) {
-                pageState.drawSectionHeading("TECHNICAL PROJECTS", headingFont);
-                for (TailoredResumeDocument.ProjectItem proj : doc.getProjects()) {
-                    pageState.ensureSpace(40f);
-                    String projName = sanitizeForPdf(proj.name != null ? proj.name : "Technical Project");
-                    String techStr = proj.technologies.isEmpty() ? "" : String.join(", ", proj.technologies);
+                pageState.renderSection("TECHNICAL PROJECTS", headingFont, () -> {
+                    for (TailoredResumeDocument.ProjectItem proj : doc.getProjects()) {
+                        pageState.ensureSpace(40f);
+                        String projName = sanitizeForPdf(proj.name != null ? proj.name : "Technical Project");
+                        String techStr = proj.technologies.isEmpty() ? "" : String.join(", ", proj.technologies);
 
-                    pageState.drawTwoColumnLine(projName, techStr, boldFont, italicFont, 9.5f);
-                    if (proj.subTitle != null && !proj.subTitle.isBlank()) {
-                        String urlStr = proj.projectUrl != null && !proj.projectUrl.isBlank() ? "Link" : "";
-                        pageState.drawTwoColumnLine(sanitizeForPdf(proj.subTitle), urlStr, italicFont, italicFont, 9f);
-                    }
-                    pageState.y -= 2f;
-
-                    for (TailoredResumeDocument.ProjectBullet pb : proj.bullets) {
-                        if (pb.text != null && !pb.text.isBlank()) {
-                            pageState.drawBullet(sanitizeForPdf(pb.text), regularFont, 9.5f, 12f);
+                        pageState.drawTwoColumnLine(projName, techStr, boldFont, italicFont, 9.5f);
+                        if (proj.subTitle != null && !proj.subTitle.isBlank()) {
+                            String urlStr = proj.projectUrl != null && !proj.projectUrl.isBlank() ? "Link" : "";
+                            pageState.drawTwoColumnLine(sanitizeForPdf(proj.subTitle), urlStr, italicFont, italicFont, 9f);
                         }
+                        pageState.y -= 2f;
+
+                        for (TailoredResumeDocument.ProjectBullet pb : proj.bullets) {
+                            if (pb.text != null && !pb.text.isBlank()) {
+                                pageState.drawBullet(sanitizeForPdf(pb.text), regularFont, 9.5f, 12f);
+                            }
+                        }
+                        pageState.y -= 3f;
                     }
-                    pageState.y -= 4f;
-                }
+                });
             }
 
             // 6. Education: STRICT GUARD
             if (doc.getEducation() != null && !doc.getEducation().isEmpty()) {
-                pageState.drawSectionHeading("EDUCATION", headingFont);
-                for (TailoredResumeDocument.EducationItem edu : doc.getEducation()) {
-                    pageState.ensureSpace(24f);
-                    String inst = edu.institution != null && !edu.institution.isBlank() ? edu.institution : edu.degree;
-                    String deg = edu.institution != null && !edu.institution.isBlank() ? edu.degree : "";
-                    String dates = edu.dates != null ? edu.dates : "";
-                    String grade = edu.grade != null ? edu.grade : "";
+                pageState.renderSection("EDUCATION", headingFont, () -> {
+                    for (TailoredResumeDocument.EducationItem edu : doc.getEducation()) {
+                        pageState.ensureSpace(24f);
+                        String inst = edu.institution != null && !edu.institution.isBlank() ? edu.institution : edu.degree;
+                        String deg = edu.institution != null && !edu.institution.isBlank() ? edu.degree : "";
+                        String dates = edu.dates != null ? edu.dates : "";
+                        String grade = edu.grade != null ? edu.grade : "";
 
-                    pageState.drawTwoColumnLine(sanitizeForPdf(inst), sanitizeForPdf(dates), boldFont, boldFont, 9.5f);
-                    if (!deg.isBlank() || !grade.isBlank()) {
-                        pageState.drawTwoColumnLine(sanitizeForPdf(deg), sanitizeForPdf(grade), italicFont, italicFont, 9.5f);
+                        pageState.drawTwoColumnLine(sanitizeForPdf(inst), sanitizeForPdf(dates), boldFont, boldFont, 9.5f);
+                        if (!deg.isBlank() || !grade.isBlank()) {
+                            pageState.drawTwoColumnLine(sanitizeForPdf(deg), sanitizeForPdf(grade), italicFont, italicFont, 9.5f);
+                        }
+                        pageState.y -= 2f;
                     }
-                    pageState.y -= 2f;
-                }
-                pageState.y -= 4f;
+                });
             }
 
             // 7. Achievements Section
             if (doc.getAchievements() != null && !doc.getAchievements().isEmpty()) {
-                pageState.drawSectionHeading("ACHIEVEMENTS", headingFont);
-                for (TailoredResumeDocument.AchievementItem ach : doc.getAchievements()) {
-                    pageState.ensureSpace(18f);
-                    String title = ach.title != null ? ach.title : "";
-                    String desc = ach.description != null ? ach.description : (ach.rawText != null ? ach.rawText : "");
-                    pageState.drawAchievementBullet(sanitizeForPdf(title), sanitizeForPdf(desc), boldFont, regularFont, 9.5f, 12f);
-                }
-                pageState.y -= 4f;
+                pageState.renderSection("ACHIEVEMENTS", headingFont, () -> {
+                    for (TailoredResumeDocument.AchievementItem ach : doc.getAchievements()) {
+                        pageState.ensureSpace(18f);
+                        String title = ach.title != null ? ach.title : "";
+                        String desc = ach.description != null ? ach.description : (ach.rawText != null ? ach.rawText : "");
+                        pageState.drawAchievementBullet(sanitizeForPdf(title), sanitizeForPdf(desc), boldFont, regularFont, 9.5f, 12f);
+                    }
+                });
+            }
+
+            List<String> overlapViolations = pageState.verifyDividerNoOverlap();
+            if (!overlapViolations.isEmpty()) {
+                log.warn("Detected {} divider-text overlap violations during PDFBox rendering: {}",
+                        overlapViolations.size(), overlapViolations);
             }
 
             pageState.close();
@@ -749,6 +757,11 @@ public class PdfGenerationService {
                 + skillsStr + ". Proven track record in architecting high-reliability RESTful microservices, optimizing database performance, and building resilient backend systems with clean architecture.";
     }
 
+    @FunctionalInterface
+    public interface SectionContentRenderer {
+        void render() throws IOException;
+    }
+
     private static class PageState {
         private final PDDocument document;
         private final PDRectangle pageSize;
@@ -758,6 +771,31 @@ public class PdfGenerationService {
         private PDPage currentPage;
         private PDPageContentStream stream;
         public float y;
+        private int currentPageIndex = -1;
+
+        public static class Box {
+            public final int page;
+            public final float minX, maxX, minY, maxY;
+            public final String label;
+
+            public Box(int page, float minX, float maxX, float minY, float maxY, String label) {
+                this.page = page;
+                this.minX = minX;
+                this.maxX = maxX;
+                this.minY = minY;
+                this.maxY = maxY;
+                this.label = label;
+            }
+
+            public boolean intersects(Box other) {
+                if (this.page != other.page) return false;
+                return (this.minX < other.maxX && this.maxX > other.minX &&
+                        this.minY < other.maxY && this.maxY > other.minY);
+            }
+        }
+
+        public final List<Box> dividerBoxes = new ArrayList<>();
+        public final List<Box> textBoxes = new ArrayList<>();
 
         public PageState(PDDocument document, PDRectangle pageSize, float margin, float startY, float printableWidth) throws IOException {
             this.document = document;
@@ -775,6 +813,7 @@ public class PdfGenerationService {
             }
             currentPage = new PDPage(pageSize);
             document.addPage(currentPage);
+            currentPageIndex++;
             stream = new PDPageContentStream(document, currentPage);
             y = startY;
         }
@@ -783,6 +822,39 @@ public class PdfGenerationService {
             if (y - requiredHeight < margin) {
                 newPage();
             }
+        }
+
+        public void recordTextBox(float minX, float maxX, float minY, float maxY, String text) {
+            textBoxes.add(new Box(currentPageIndex, minX, maxX, minY, maxY, text));
+        }
+
+        public void recordDividerBox(float minX, float maxX, float lineY) {
+            dividerBoxes.add(new Box(currentPageIndex, minX, maxX, lineY - 0.25f, lineY + 0.25f, "DIVIDER"));
+        }
+
+        public List<String> verifyDividerNoOverlap() {
+            List<String> violations = new ArrayList<>();
+            for (Box div : dividerBoxes) {
+                for (Box txt : textBoxes) {
+                    if (div.intersects(txt)) {
+                        violations.add("Divider on page " + (div.page + 1) + " (Y=" + div.minY + ") intersects text '" + txt.label + "' (Y=[" + txt.minY + ", " + txt.maxY + "])");
+                    }
+                }
+            }
+            return violations;
+        }
+
+        public List<String> verifyDividerWhitespaceBuffer(float minBufferPoints) {
+            List<String> violations = new ArrayList<>();
+            for (Box div : dividerBoxes) {
+                Box bufferZone = new Box(div.page, div.minX, div.maxX, div.minY - minBufferPoints, div.maxY + minBufferPoints, "DIVIDER_BUFFER");
+                for (Box txt : textBoxes) {
+                    if (bufferZone.intersects(txt)) {
+                        violations.add("Text '" + txt.label + "' violates " + minBufferPoints + "pt whitespace buffer around divider on page " + (div.page + 1));
+                    }
+                }
+            }
+            return violations;
         }
 
         public void drawCenteredText(String text, PDType1Font font, float fontSize) throws IOException {
@@ -794,25 +866,57 @@ public class PdfGenerationService {
             stream.newLineAtOffset(Math.max(margin, x), y);
             stream.showText(text);
             stream.endText();
+            recordTextBox(x, x + stringWidth, y - (fontSize * 0.25f), y + (fontSize * 0.85f), text);
             y -= fontSize;
         }
 
-        public void drawSectionHeading(String title, PDType1Font font) throws IOException {
-            ensureSpace(22f);
+        /**
+         * Reusable Section Component adhering strictly to document flow:
+         * 1. Pre-check: keep heading + divider + first 1-2 content items together (>= 50pt).
+         * 2. Section Heading text with proper spacing.
+         * 3. Heading-to-divider clear spacing (7.5pt, leaving 4.6pt whitespace below descenders).
+         * 4. 0.5pt horizontal rule divider across printable width.
+         * 5. Divider-to-content clear spacing (12.5pt, leaving 5.4pt whitespace above content ascenders).
+         * 6. Sequential content execution (variable bullet/project heights push dividers naturally).
+         * 7. Section bottom spacing.
+         */
+        public void renderSection(String title, PDType1Font headingFont, SectionContentRenderer contentRenderer) throws IOException {
+            ensureSpace(50f);
             y -= 4f;
+
+            // 1. Heading text
             stream.beginText();
-            stream.setFont(font, 11.5f);
+            stream.setFont(headingFont, 11.5f);
             stream.newLineAtOffset(margin, y);
             stream.showText(title);
             stream.endText();
-            y -= 3f;
+            float titleWidth = headingFont.getStringWidth(title) / 1000f * 11.5f;
+            recordTextBox(margin, margin + titleWidth, y - (11.5f * 0.25f), y + (11.5f * 0.85f), title);
 
-            // Horizontal rule matching Master Resume 0.5pt
+            // 2. Heading to divider spacing
+            y -= 7.5f;
+
+            // 3. Horizontal rule divider
             stream.setLineWidth(0.5f);
             stream.moveTo(margin, y);
             stream.lineTo(margin + printableWidth, y);
             stream.stroke();
-            y -= 6f;
+            recordDividerBox(margin, margin + printableWidth, y);
+
+            // 4. Divider to content spacing
+            y -= 12.5f;
+
+            // 5. Render content
+            if (contentRenderer != null) {
+                contentRenderer.render();
+            }
+
+            // 6. Bottom spacing
+            y -= 4f;
+        }
+
+        public void drawSectionHeading(String title, PDType1Font font) throws IOException {
+            renderSection(title, font, null);
         }
 
         public void drawTwoColumnLine(String left, String right, PDType1Font leftFont, PDType1Font rightFont, float fontSize) throws IOException {
@@ -822,6 +926,8 @@ public class PdfGenerationService {
             stream.newLineAtOffset(margin, y);
             stream.showText(left);
             stream.endText();
+            float leftWidth = leftFont.getStringWidth(left) / 1000f * fontSize;
+            recordTextBox(margin, margin + leftWidth, y - (fontSize * 0.25f), y + (fontSize * 0.85f), left);
 
             if (right != null && !right.isBlank()) {
                 float rightWidth = rightFont.getStringWidth(right) / 1000f * fontSize;
@@ -831,6 +937,7 @@ public class PdfGenerationService {
                 stream.newLineAtOffset(rx, y);
                 stream.showText(right);
                 stream.endText();
+                recordTextBox(rx, rx + rightWidth, y - (fontSize * 0.25f), y + (fontSize * 0.85f), right);
             }
             y -= (fontSize + 3f);
         }
@@ -844,6 +951,8 @@ public class PdfGenerationService {
                 stream.newLineAtOffset(margin, y);
                 stream.showText(line);
                 stream.endText();
+                float lineWidth = font.getStringWidth(line) / 1000f * fontSize;
+                recordTextBox(margin, margin + lineWidth, y - (fontSize * 0.25f), y + (fontSize * 0.85f), line);
                 y -= lineHeight;
             }
         }
@@ -867,6 +976,8 @@ public class PdfGenerationService {
                     stream.showText(line);
                 }
                 stream.endText();
+                float lineWidth = regFont.getStringWidth(line) / 1000f * fontSize;
+                recordTextBox(margin, margin + lineWidth, y - (fontSize * 0.25f), y + (fontSize * 0.85f), line);
                 y -= 12f;
             }
         }
@@ -889,6 +1000,8 @@ public class PdfGenerationService {
                     stream.showText(lines.get(i));
                 }
                 stream.endText();
+                float lineWidth = font.getStringWidth(lines.get(i)) / 1000f * fontSize;
+                recordTextBox(margin + bulletIndent, margin + bulletIndent + lineWidth, y - (fontSize * 0.25f), y + (fontSize * 0.85f), lines.get(i));
                 y -= lineHeight;
             }
         }
@@ -925,6 +1038,8 @@ public class PdfGenerationService {
                     stream.showText(lines.get(i));
                 }
                 stream.endText();
+                float lineWidth = regFont.getStringWidth(lines.get(i)) / 1000f * fontSize;
+                recordTextBox(margin + bulletIndent, margin + bulletIndent + lineWidth, y - (fontSize * 0.25f), y + (fontSize * 0.85f), lines.get(i));
                 y -= lineHeight;
             }
         }
@@ -1006,13 +1121,20 @@ public class PdfGenerationService {
 
             ProcessBuilder pb = new ProcessBuilder(
                     "pdflatex",
+                    "-no-shell-escape",
                     "-interaction=nonstopmode",
                     "-output-directory=" + tempDir.toAbsolutePath(),
                     texFile.toAbsolutePath().toString()
             );
             pb.redirectErrorStream(true);
             Process p = pb.start();
-            int exitCode = p.waitFor();
+            boolean finished = p.waitFor(15, java.util.concurrent.TimeUnit.SECONDS);
+            if (!finished) {
+                p.destroyForcibly();
+                log.warn("pdflatex compilation timed out after 15s");
+                return false;
+            }
+            int exitCode = p.exitValue();
 
             Path genPdf = tempDir.resolve("resume.pdf");
             if (exitCode == 0 && Files.exists(genPdf) && Files.size(genPdf) > 0) {

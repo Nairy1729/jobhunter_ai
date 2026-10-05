@@ -82,8 +82,20 @@ public class TailoredResumeController {
         File texFile = tailoringEngineService.getLatexFile(id, userDetails.getId());
         Resource resource = new FileSystemResource(texFile);
 
+        String filename = texFile.getName().endsWith(".tex") && !texFile.getName().equalsIgnoreCase("resume.tex") && !texFile.getName().contains("tailored")
+                ? texFile.getName()
+                : "resume.tex";
+        if ("resume.tex".equals(filename)) {
+            try {
+                TailoredResumeResponse resDto = resumeTailoringService.getTailoredResume(id, userDetails.getId());
+                if (resDto != null && resDto.getTargetCompany() != null) {
+                    filename = ResumeTailoringService.generateResumeFilename(resDto.getTargetCompany(), userDetails.getUsername(), "tex");
+                }
+            } catch (Exception ignored) {}
+        }
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"tailored-resume.tex\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(MediaType.parseMediaType("application/x-tex"))
                 .contentLength(texFile.length())
                 .body(resource);

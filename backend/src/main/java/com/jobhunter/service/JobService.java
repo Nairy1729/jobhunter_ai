@@ -421,6 +421,26 @@ public class JobService {
     }
 
     @Transactional(readOnly = true)
+    public List<JobDto> getAppliedJobs(UUID userId) {
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId).orElse(null);
+        if (profile == null) {
+            return Collections.emptyList();
+        }
+        List<Application> apps = applicationRepository.findByCandidateProfileIdAndAppliedTrue(profile.getId());
+        return apps.stream().map(app -> {
+            JobDto dto = discoveryService.mapToDto(app.getJob());
+            populateFreshness(dto, app.getJob().getPostingDate());
+            dto.setApplied(true);
+            dto.setAppliedAt(app.getAppliedAt() != null ? app.getAppliedAt() : app.getCreatedAt());
+            return dto;
+        }).sorted(Comparator.comparing(JobDto::getAppliedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+        .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<SearchRunDto> getRecentSearchRuns() {
         return searchRunRepository.findTop10ByOrderByStartedAtDesc().stream()
                 .map(this::mapToSearchRunDto)

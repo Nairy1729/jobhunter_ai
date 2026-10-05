@@ -1,5 +1,6 @@
 package com.jobhunter.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ public class Resume {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "candidate_profile_id", nullable = false)
     private CandidateProfile candidateProfile;
@@ -45,6 +47,7 @@ public class Resume {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "masterResume", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ResumeVersion> versions = new ArrayList<>();
 
