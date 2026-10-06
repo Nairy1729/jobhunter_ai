@@ -876,8 +876,9 @@ public class OfferPilotTailoringEngineService {
         resp.setTemplateName(entity.getTemplateName());
         resp.setStatus(entity.getStatus());
         resp.setAtsScoreEstimate(entity.getAtsScoreEstimate());
-        resp.setLatexAvailable(entity.getLatexFilePath() != null || entity.getLatexSource() != null);
-        resp.setPdfAvailable(entity.getPdfFilePath() != null && new File(entity.getPdfFilePath()).exists());
+        resp.setPdfAvailable("GENERATED".equalsIgnoreCase(entity.getStatus())
+                || "READY_FOR_DOWNLOAD".equalsIgnoreCase(entity.getStatus())
+                || (entity.getPdfFilePath() != null && new File(entity.getPdfFilePath()).exists()));
         resp.setCreatedAt(entity.getCreatedAt());
         resp.setUpdatedAt(entity.getUpdatedAt());
         return resp;

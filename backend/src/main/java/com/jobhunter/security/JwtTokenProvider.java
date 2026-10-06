@@ -24,7 +24,12 @@ public class JwtTokenProvider {
     public JwtTokenProvider(
             @Value("${security.jwt.secret-key}") String secretKey,
             @Value("${security.jwt.access-token-expiration-ms}") long accessTokenExpirationMs) {
-        this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+        if (secretKey == null || secretKey.trim().length() < 32) {
+            throw new IllegalStateException(
+                    "JWT secret key must be configured and at least 32 characters (256 bits) long for production security. " +
+                    "Set the JWT_SECRET environment variable.");
+        }
+        this.key = Keys.hmacShaKeyFor(secretKey.trim().getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpirationMs = accessTokenExpirationMs;
     }
 

@@ -5,6 +5,7 @@ import com.jobhunter.model.entity.government.GovernmentSource;
 import com.jobhunter.repository.government.GovernmentSourceRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Service
+@ConditionalOnProperty(name = "government.scheduler.enabled", havingValue = "true", matchIfMissing = false)
 public class GovernmentSourceSchedulerService {
 
     private static final Logger log = LoggerFactory.getLogger(GovernmentSourceSchedulerService.class);

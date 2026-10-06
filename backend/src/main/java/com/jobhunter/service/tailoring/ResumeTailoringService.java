@@ -1061,7 +1061,8 @@ public class ResumeTailoringService {
         TailoredResume tailored = tailoredResumeRepository.findByIdAndUserId(tailoredResumeId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Tailored resume not found or access denied: " + tailoredResumeId));
 
-        if (!ResumeTailoringStatus.READY_FOR_DOWNLOAD.name().equalsIgnoreCase(tailored.getStatus())) {
+        if (!ResumeTailoringStatus.READY_FOR_DOWNLOAD.name().equalsIgnoreCase(tailored.getStatus())
+                && !"GENERATED".equalsIgnoreCase(tailored.getStatus())) {
             log.error("RESUME_DOWNLOAD_BLOCKED - Cannot download resume [{}] because status is [{}]",
                     tailoredResumeId, tailored.getStatus());
             throw new IllegalStateException("Resume download blocked: Resume status is " + tailored.getStatus()
@@ -1075,7 +1076,55 @@ public class ResumeTailoringService {
             }
         }
 
-        throw new IllegalStateException("PDF file not found on disk. Please re-tailor the resume.");
+        // Ephemeral storage fallback: Regenerate PDF from persisted resume data using PDFBox engine
+        log.info("PDF file missing on disk for TailoredResume [{}]. Regenerating on-demand using PDFBox engine...", tailoredResumeId);
+        try {
+            CandidateProfile profile = tailored.getCandidateProfile();
+            User user = profile.getUser();
+            TailoringPlanDto plan = deserializePlan(tailored.getTailoringPlan());
+            List<CandidateExperience> experiences = experienceRepository.findByCandidateProfileId(profile.getId());
+            List<CandidateProject> projects = projectRepository.findByCandidateProfileId(profile.getId());
+            List<CandidateSkill> skills = candidateSkillRepository.findByCandidateProfileId(profile.getId());
+
+            String candidateNameFallback = (user.getFirstName() != null && !user.getFirstName().isBlank())
+                    ? user.getFirstName()
+                    : "Candidate";
+            String companyName = tailored.getTargetCompany() != null && !tailored.getTargetCompany().isBlank()
+                    ? tailored.getTargetCompany()
+                    : (tailored.getJob() != null && tailored.getJob().getCompany() != null
+                    ? tailored.getJob().getCompany().getName()
+                    : "Company");
+
+            String fileName = generateResumeFilename(companyName, candidateNameFallback, "pdf");
+            Path storageDir = Paths.get(uploadDir, "tailored", profile.getId().toString(), "v" + tailored.getVersionNumber());
+            if (!Files.exists(storageDir)) {
+                Files.createDirectories(storageDir);
+            }
+            String targetPdfPath = storageDir.resolve(fileName).toAbsolutePath().toString();
+
+            File generatedPdf = pdfGenerationService.generatePdfDocument(
+                    tailored.getLatexSource(),
+                    user,
+                    profile,
+                    plan,
+                    experiences,
+                    projects,
+                    skills,
+                    targetPdfPath
+            );
+
+            if (generatedPdf != null && generatedPdf.exists() && generatedPdf.length() > 0) {
+                tailored.setPdfFilePath(generatedPdf.getAbsolutePath());
+                tailored.setPdfFileSizeBytes(generatedPdf.length());
+                tailoredResumeRepository.save(tailored);
+                return generatedPdf;
+            } else {
+                throw new IOException("PDF generation returned empty or null file");
+            }
+        } catch (Exception e) {
+            log.error("Failed to regenerate PDF on-demand for tailored resume [{}]", tailoredResumeId, e);
+            throw new IllegalStateException("PDF file could not be generated from persisted resume data: " + e.getMessage(), e);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -1303,10 +1352,10 @@ public class ResumeTailoringService {
         res.setTailoredMarkdown(entity.getTailoredMarkdown());
         res.setLatexSource(entity.getLatexSource());
 
-        boolean isReady = ResumeTailoringStatus.READY_FOR_DOWNLOAD.name().equalsIgnoreCase(entity.getStatus());
-        boolean fileExists = entity.getPdfFilePath() != null && new File(entity.getPdfFilePath()).exists();
+        boolean isReady = ResumeTailoringStatus.READY_FOR_DOWNLOAD.name().equalsIgnoreCase(entity.getStatus())
+                || "GENERATED".equalsIgnoreCase(entity.getStatus());
 
-        res.setPdfAvailable(isReady && fileExists);
+        res.setPdfAvailable(isReady);
         if (res.isPdfAvailable()) {
             res.setPdfDownloadUrl("/api/tailored-resumes/" + entity.getId() + "/download");
         }

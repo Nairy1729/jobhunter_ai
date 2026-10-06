@@ -1,5 +1,5 @@
 server:
-  port: 8085
+  port: ${PORT:8085}
   servlet:
     context-path: /
 
@@ -38,13 +38,23 @@ spring:
       max-file-size: 10MB
       max-request-size: 15MB
 
+# Production CORS Configuration
+app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}
+
 # Security & JWT Configuration
 security:
   jwt:
-    # 256-bit secure default secret for development
-    secret-key: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    # Requires explicit JWT_SECRET or APP_JWT_SECRET environment variable (minimum 256 bits)
+    secret-key: ${JWT_SECRET:${APP_JWT_SECRET:}}
     access-token-expiration-ms: 900000     # 15 minutes
     refresh-token-expiration-ms: 604800000 # 7 days
+
+# Government Jobs Background Scheduler (Safe Default: Disabled on Free Tier)
+government:
+  scheduler:
+    enabled: ${GOVERNMENT_SCHEDULER_ENABLED:false}
 
 # Web Intelligence & AI Configuration
 firecrawl:
