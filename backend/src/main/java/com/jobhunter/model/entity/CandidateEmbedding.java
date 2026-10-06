@@ -1,5 +1,7 @@
 package com.jobhunter.model.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -23,6 +25,7 @@ public class CandidateEmbedding {
     @Column(nullable = false)
     private int dimensions = 768;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "embedding_data", columnDefinition = "jsonb", nullable = false)
     private String embeddingData; // JSON array of 768 float numbers
 

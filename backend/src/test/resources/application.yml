@@ -6,7 +6,7 @@ spring:
     name: jobhunter-ai-backend-test
   
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/jobhunter_db?stringtype=unspecified}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/jobhunter_db}
     username: ${SPRING_DATASOURCE_USERNAME:jobhunter}
     password: ${SPRING_DATASOURCE_PASSWORD:jobhunter}
     driver-class-name: org.postgresql.Driver

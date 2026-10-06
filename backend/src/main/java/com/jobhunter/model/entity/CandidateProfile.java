@@ -1,5 +1,7 @@
 package com.jobhunter.model.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -31,9 +33,11 @@ public class CandidateProfile {
     @Column(name = "current_location", length = 150)
     private String currentLocation;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "preferred_locations", columnDefinition = "jsonb", nullable = false)
     private String preferredLocations = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "work_modes", columnDefinition = "jsonb", nullable = false)
     private String workModes = "[]";
 
@@ -43,6 +47,7 @@ public class CandidateProfile {
     @Column(length = 10, nullable = false)
     private String currency = "INR";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "target_roles", columnDefinition = "jsonb", nullable = false)
     private String targetRoles = "[]";
 
@@ -58,6 +63,7 @@ public class CandidateProfile {
     @Column(name = "phone_number", length = 50)
     private String phoneNumber;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "raw_profile_data", columnDefinition = "jsonb", nullable = false)
     private String rawProfileData = "{}";
 

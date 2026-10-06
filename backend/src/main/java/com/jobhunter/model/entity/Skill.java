@@ -1,5 +1,7 @@
 package com.jobhunter.model.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -18,6 +20,7 @@ public class Skill {
     @Column(nullable = false, length = 100)
     private String category;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false)
     private String aliases = "[]";
 

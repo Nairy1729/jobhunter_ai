@@ -1,5 +1,7 @@
 package com.jobhunter.model.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -19,6 +21,7 @@ public class SearchRun {
     @Column(name = "query_string", columnDefinition = "TEXT", nullable = false)
     private String queryString;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "parameters", columnDefinition = "jsonb", nullable = false)
     private String parameters = "{}";
 

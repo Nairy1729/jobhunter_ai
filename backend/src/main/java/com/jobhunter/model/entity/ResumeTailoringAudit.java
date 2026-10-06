@@ -1,5 +1,7 @@
 package com.jobhunter.model.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -45,6 +47,7 @@ public class ResumeTailoringAudit {
     @Column(name = "failure_reason", columnDefinition = "TEXT")
     private String failureReason;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "audit_details", columnDefinition = "jsonb", nullable = false)
     private String auditDetails = "{}";
 

@@ -1,5 +1,7 @@
 package com.jobhunter.model.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.Instant;
@@ -35,6 +37,7 @@ public class Resume {
     @Column(name = "raw_extracted_text", columnDefinition = "TEXT", nullable = false)
     private String rawExtractedText;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "structured_content", columnDefinition = "jsonb", nullable = false)
     private String structuredContent = "{}";
 

@@ -1,5 +1,7 @@
 package com.jobhunter.model.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -32,9 +34,11 @@ public class Company {
     @Column(length = 150)
     private String headquarters;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "known_tech_stack", columnDefinition = "jsonb", nullable = false)
     private String knownTechStack = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "intelligence_summary", columnDefinition = "jsonb", nullable = false)
     private String intelligenceSummary = "{}";
 

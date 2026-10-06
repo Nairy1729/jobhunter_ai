@@ -1,5 +1,7 @@
 package com.jobhunter.model.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -22,15 +24,18 @@ public class CandidateProject {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false)
     private String technologies = "[]";
 
     @Column(columnDefinition = "TEXT")
     private String architecture;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false)
     private String responsibilities = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "measurable_outcomes", columnDefinition = "jsonb", nullable = false)
     private String measurableOutcomes = "[]";
 

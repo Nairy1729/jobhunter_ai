@@ -1,5 +1,7 @@
 package com.jobhunter.model.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -31,21 +33,27 @@ public class JobMatch {
     @Column(name = "queue_tier", nullable = false, length = 50)
     private String queueTier = "REVIEW"; // HIGH_PRIORITY, REVIEW, LOW_PRIORITY
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "strong_matches", columnDefinition = "jsonb", nullable = false)
     private String strongMatches = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "partial_matches", columnDefinition = "jsonb", nullable = false)
     private String partialMatches = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false)
     private String gaps = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "transferable_experience", columnDefinition = "jsonb", nullable = false)
     private String transferableExperience = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "risk_factors", columnDefinition = "jsonb", nullable = false)
     private String riskFactors = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "advantage_report", columnDefinition = "jsonb", nullable = false)
     private String advantageReport = "{}";
 
@@ -58,12 +66,15 @@ public class JobMatch {
     @Column(name = "days_since_posted")
     private Integer daysSincePosted;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "why_this_job", columnDefinition = "jsonb")
     private String whyThisJob = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "potential_concerns", columnDefinition = "jsonb")
     private String potentialConcerns = "[]";
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "requirement_coverage", columnDefinition = "jsonb")
     private String requirementCoverage = "[]";
 

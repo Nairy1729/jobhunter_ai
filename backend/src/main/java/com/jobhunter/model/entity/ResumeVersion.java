@@ -1,5 +1,7 @@
 package com.jobhunter.model.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -26,6 +28,7 @@ public class ResumeVersion {
     @Column(name = "rendered_file_path", length = 500)
     private String renderedFilePath;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "diff_payload", columnDefinition = "jsonb", nullable = false)
     private String diffPayload = "{}";
 

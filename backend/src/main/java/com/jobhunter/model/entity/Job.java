@@ -1,5 +1,7 @@
 package com.jobhunter.model.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -74,6 +76,7 @@ public class Job {
     @Column(name = "raw_description_markdown", columnDefinition = "TEXT", nullable = false)
     private String rawDescriptionMarkdown;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "structured_job_spec", columnDefinition = "jsonb", nullable = false)
     private String structuredJobSpec = "{}";
 
