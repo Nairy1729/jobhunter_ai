@@ -157,7 +157,7 @@ export const apiClient = {
     },
     getPdfDownloadUrl: (id: string): string => {
       const token = localStorage.getItem('jh_token');
-      return `/api/tailored-resumes/${id}/download${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+      return `${apiBase}/api/tailored-resumes/${id}/download${token ? `?token=${encodeURIComponent(token)}` : ''}`;
     },
     downloadPdf: async (id: string, defaultFilename?: string): Promise<void> => {
       const token = localStorage.getItem('jh_token');
